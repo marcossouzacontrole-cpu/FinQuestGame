@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-const SERVER_URL = 'http://localhost:5174';
+const SERVER_URL = import.meta.env.VITE_BASE44_BACKEND_URL || 'http://localhost:5174';
 
 export default function Login() {
     const navigate = useNavigate();
