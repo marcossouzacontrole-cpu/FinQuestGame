@@ -1,12 +1,26 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { withCORS } from './cors.ts';
 
 Deno.serve(async (req) => {
+    // Handle CORS Preflight
+    if (req.method === "OPTIONS") {
+        return new Response(null, {
+            status: 204, headers: new Headers({
+                "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, x-api-key, x-app-id, x-sdk-version, Accept, Origin, x-requested-with",
+                "Access-Control-Max-Age": "86400",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Origin": req.headers.get("origin") || "*"
+            })
+        });
+    }
+
     try {
         const base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
 
         if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+            return withCORS(Response.json({ error: 'Unauthorized' }, { status: 401 }), req);
         }
 
         // 1. TIMING
@@ -85,7 +99,7 @@ Deno.serve(async (req) => {
             gold_coins: 0
         };
 
-        return Response.json({
+        return withCORS(Response.json({
             success: true,
             vitalSigns: {
                 hp: {
@@ -111,10 +125,10 @@ Deno.serve(async (req) => {
                     class: userProfile.current_class || 'Aprendiz'
                 }
             }
-        });
+        }), req);
 
     } catch (error) {
         console.error('Vital Signs Error:', error);
-        return Response.json({ error: error.message }, { status: 500 });
+        return withCORS(Response.json({ error: error.message }, { status: 500 }), req);
     }
 });
