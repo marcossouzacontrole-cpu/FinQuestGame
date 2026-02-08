@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-const IS_PROD = window.location.hostname.includes('vercel.app');
-const DEFAULT_PROD_URL = 'https://finquest-api-prod-marcos-123.deno.dev';
-const SERVER_URL = import.meta.env.VITE_BASE44_BACKEND_URL || (IS_PROD ? DEFAULT_PROD_URL : 'http://localhost:5174');
+import { getBackendTarget } from '@/lib/env-config';
+
+const SERVER_URL = getBackendTarget();
 console.log('🔗 Backend Target:', SERVER_URL);
 
 export default function Login() {
