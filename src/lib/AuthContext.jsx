@@ -5,7 +5,9 @@ import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
 const AuthContext = createContext();
 
-const LOCAL_SERVER_URL = 'http://localhost:5174';
+const IS_PROD = window.location.hostname.includes('vercel.app');
+const DEFAULT_PROD_URL = 'https://finquest-api-prod-marcos-123.deno.dev';
+const LOCAL_SERVER_URL = import.meta.env.VITE_BASE44_BACKEND_URL || (IS_PROD ? DEFAULT_PROD_URL : 'http://localhost:5174');
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
