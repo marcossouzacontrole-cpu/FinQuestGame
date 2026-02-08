@@ -1,5 +1,6 @@
 import { create, decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 import db, { ensureConnection } from "./db.ts";
+import { createCORSHeaders, corsHeaders } from "./cors.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET") || "finquest-top-secret-key-2026";
 const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://finquestgame.vercel.app";
@@ -13,8 +14,6 @@ const key = await crypto.subtle.importKey(
     false,
     ["sign", "verify"]
 );
-
-import { createCORSHeaders, corsHeaders } from "./cors.ts";
 
 function createResponse(body: any, init: ResponseInit = {}, req?: Request) {
     const headers = createCORSHeaders(req);

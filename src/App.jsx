@@ -55,19 +55,30 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/login" element={<Pages.Login />} />
+
+      {/* Protected Routes */}
       <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
+        isAuthenticated ? (
+          <LayoutWrapper currentPageName={mainPageKey}>
+            <MainPage />
+          </LayoutWrapper>
+        ) : (
+          <Pages.Login />
+        )
       } />
+
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
           path={`/${path.toLowerCase()}`}
           element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
+            isAuthenticated ? (
+              <LayoutWrapper currentPageName={path}>
+                <Page />
+              </LayoutWrapper>
+            ) : (
+              <Pages.Login />
+            )
           }
         />
       ))}
