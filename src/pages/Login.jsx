@@ -36,7 +36,12 @@ export default function Login() {
 
             localStorage.setItem('base44_local_token', data.token);
             toast.success(isLogin ? 'Bem-vindo de volta, Herói!' : 'Conta criada com sucesso!');
-            navigate('/');
+
+            if (isLogin) {
+                navigate('/');
+            } else {
+                navigate('/onboarding');
+            }
             window.location.reload(); // Refresh to update AuthContext
         } catch (error) {
             toast.error(error.message);
