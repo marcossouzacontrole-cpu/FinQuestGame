@@ -1,0 +1,183 @@
+{
+    "projectId": "697e8c94a74a96708b9ed8a6",
+    "name": "FinQuest",
+    "site": {
+        "outputDirectory": "dist",
+        "buildCommand": "npm run build"
+    },
+    "functions": {
+        "directory": "functions"
+    },
+    "entities": {
+        "Account": {
+            "fields": {
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "balance": {
+                    "type": "number"
+                },
+                "pluggy_account_id": {
+                    "type": "string"
+                },
+                "pluggy_item_id": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "last_transaction_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "FinTransaction": {
+            "fields": {
+                "date": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "account_id": {
+                    "type": "string"
+                },
+                "pluggy_transaction_id": {
+                    "type": "string"
+                },
+                "pluggy_account_id": {
+                    "type": "string"
+                },
+                "budget_category_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "BudgetCategory": {
+            "fields": {
+                "name": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "number"
+                },
+                "expenses": {
+                    "type": "json"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
+                }
+            }
+        },
+        "TransactionRule": {
+            "fields": {
+                "pattern": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "transaction_type": {
+                    "type": "string"
+                },
+                "match_type": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "number"
+                }
+            }
+        },
+        "Goal": {
+            "fields": {
+                "title": {
+                    "type": "string"
+                },
+                "target_value": {
+                    "type": "number"
+                },
+                "current_value": {
+                    "type": "number"
+                },
+                "deadline": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "Mission": {
+            "fields": {
+                "title": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "points": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "Achievement": {
+            "fields": {
+                "title": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "unlocked_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "Season": {
+            "fields": {
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "active": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: finquest-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-finquest}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-finquest123}
+      POSTGRES_DB: ${DB_NAME:-finquest_local}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: finquest-n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${DB_NAME:-finquest_local}
+      - DB_POSTGRESDB_USER=${DB_USER:-finquest}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD:-finquest123}
+    volumes:
+      - ./support/n8n/n8n_data:/home/node/.n8n
+      - ./support/n8n/local_files:/files
+    depends_on:
+      - db
+
+  functions:
+    image: denoland/deno:alpine
+    container_name: finquest-functions
+    restart: always
+    working_dir: /app
+    ports:
+      - "5174:5174"
+    volumes:
+      - .:/app
+    environment:
+      - DB_URL=postgres://${DB_USER:-finquest}:${DB_PASSWORD:-finquest123}@db:5432/${DB_NAME:-finquest_local}
+      - PLUGGY_CLIENT_ID=${PLUGGY_CLIENT_ID}
+      - PLUGGY_CLIENT_SECRET=${PLUGGY_CLIENT_SECRET}
+      - n8n_WEBHOOK_URL=http://n8n:5678/webhook/classify-transfer
+    command: run --allow-all --watch functions/server.ts
+    depends_on:
+      - db
+
+volumes:
+  db_data:

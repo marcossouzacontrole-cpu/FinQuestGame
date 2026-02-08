@@ -1,0 +1,8 @@
+{
+    "imports": {
+        "npm:@base44/sdk@0.8.6": "./functions/local_sdk.ts",
+        "npm:@base44/sdk": "./functions/local_sdk.ts",
+        "postgres": "https://deno.land/x/postgres@v0.17.0/mod.ts",
+        "date-fns": "https://deno.land/x/date_fns@v2.22.1/index.js"
+    }
+}

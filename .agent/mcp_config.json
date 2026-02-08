@@ -1,0 +1,31 @@
+{
+    "mcpServers": {
+        "context7": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@upstash/context7-mcp",
+                "--api-key",
+                "YOUR_API_KEY"
+            ]
+        },
+        "shadcn": {
+            "command": "npx",
+            "args": [
+                "shadcn@latest",
+                "mcp"
+            ]
+        },
+        "n8n": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-http-client",
+                "http://localhost:5678/mcp-server/http",
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwY2E3NDQxYi1kNDk2LTQ1ZjYtYTU4OC01MzYxOWE0MzA2MDgiLCJpc3MiOiJuOG4iLCJhdWQiOiJtY3Atc2VydmVyLWFwaSIsImp0aSI6IjQ5ODUwMTFiLTI5ZjMtNDIyOC1iNWU0LWUzOTVlMTc4NmQ0MyIsImlhdCI6MTc3MDQ5NjM4NX0.OIauhKP-tm3rma6hqvH8qkvLB9bVQgTgNYyC-9GEhns"
+            ]
+        }
+        //other mcp servers
+    }
+}
+// setup mcp server in  ~/.gemini\antigravity\mcp_config.json

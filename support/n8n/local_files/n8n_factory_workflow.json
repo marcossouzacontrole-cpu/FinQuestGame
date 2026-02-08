@@ -1,0 +1,92 @@
+{
+    "name": "FinQuest - Factory Processor (Dynamic)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "classify-transfer",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "name": "Webhook (FinQuest)",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                200,
+                300
+            ],
+            "webhookId": "factory-webhook-v1"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Extrai metadados, regras e conteúdo bruto\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const payload = item.json.body || {};\n  results.push({\n    json: {\n      rawData: payload.rawData || \"\",\n      rules: payload.rules || [],\n      sourceAccountID: payload.sourceAccountID || \"\",\n      currentUserID: payload.currentUserID || \"\",\n      context: payload.context || \"general\"\n    }\n  });\n}\n\nreturn results;"
+            },
+            "name": "Preparar Dados",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                400,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Motor de Classificação Dinâmico\nconst rawData = $input.item.json.rawData;\nconst rules = $input.item.json.rules;\nconst lines = rawData.split(/\\r?\\n/);\nconst transactions = [];\n\nfor (const line of lines) {\n  if (!line.trim()) continue;\n  \n  const amountMatch = line.match(/(-?\\d+[\\.,]\\d{2})/);\n  const dateMatch = line.match(/(\\d{2}\\/\\d{2})/);\n  let description = line.replace(/(-?\\d+[\\.,]\\d{2})/, \"\").replace(/\\d{2}\\/\\d{2}/, \"\").trim();\n  \n  if (description) {\n    let category = \"Outros\";\n    let subCategory = \"Não Classificado\";\n    let foundType = amountMatch && amountMatch[0].includes(\"-\") ? \"expense\" : \"income\";\n    \n    // Aplicação de Regras Dinâmicas\n    for (const rule of rules) {\n      const pattern = rule.pattern || \"\";\n      if (description.toUpperCase().includes(pattern.toUpperCase())) {\n        category = rule.category || \"Outros\";\n        subCategory = rule.category || \"Não Classificado\";\n        foundType = rule.transaction_type || foundType;\n        break;\n      }\n    }\n\n    transactions.push({\n      date: dateMatch ? dateMatch[0] + \"/2026\" : new Date().toLocaleDateString(),\n      description: description,\n      amount: amountMatch ? Math.abs(parseFloat(amountMatch[0].replace(\",\", \".\"))) : 0,\n      categoryName: category,\n      subCategory: subCategory,\n      type: foundType\n    });\n  }\n}\n\nreturn transactions;"
+            },
+            "name": "Motor de IA (Dinâmico)",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// Padronização e Envio\nreturn $input.all();"
+            },
+            "name": "Resultado Padronizado",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                900,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook (FinQuest)": {
+            "main": [
+                [
+                    {
+                        "node": "Preparar Dados",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Preparar Dados": {
+            "main": [
+                [
+                    {
+                        "node": "Motor de IA (Dinâmico)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Motor de IA (Dinâmico)": {
+            "main": [
+                [
+                    {
+                        "node": "Resultado Padronizado",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
