@@ -1,12 +1,12 @@
 import { create, decode } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 import db, { ensureConnection } from "./db.ts";
-import { createCORSHeaders, corsHeaders } from "./cors.ts";
+import { createCORSHeaders } from "./cors.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET") || "finquest-top-secret-key-2026";
 const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://finquestgame.vercel.app";
 const SERVER_URL = Deno.env.get("SERVER_URL") || "https://finquest-api-prod-marcos-123.deno.dev";
 
-// Crypto key for JWT
+// Crypto key para JWT
 const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(JWT_SECRET),
@@ -18,7 +18,7 @@ const key = await crypto.subtle.importKey(
 function createResponse(body: any, init: ResponseInit = {}, req?: Request) {
     const headers = createCORSHeaders(req);
     if (init.headers) {
-        new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+        new Headers(init.headers).forEach((value, k) => headers.set(k, value));
     }
 
     if (typeof body === "object" && body !== null && !(body instanceof Uint8Array)) {
@@ -34,20 +34,27 @@ async function createToken(payload: any) {
 
 Deno.serve(async (req) => {
     try {
-        // 1. Handle CORS Preflight
+        const url = new URL(req.url);
+        const path = url.pathname;
+
+        // 1. Handle CORS Preflight (EXTREMAMENTE IMPORTANTE)
         if (req.method === "OPTIONS") {
             return new Response(null, { status: 204, headers: createCORSHeaders(req) });
         }
 
-        const url = new URL(req.url);
-        const path = url.pathname;
+        console.log(`[API Request] ${req.method} ${path}`);
 
-        // 2. Handle Analytics (Anti-Crash for SDK)
+        // 2. Health Check (Para debug)
+        if (path === "/api/health" || path === "/") {
+            return createResponse({ status: "alive", version: "5.0.3", serverUrl: SERVER_URL }, {}, req);
+        }
+
+        // 3. Analytics (Anti-Crash)
         if (path.includes("/analytics/track")) {
             return createResponse({ success: true }, {}, req);
         }
 
-        // 3. Handle Identity (SDK me() support)
+        // 4. Me/Identity
         if (path.includes("/entities/User/me") || path.endsWith("/api/auth/me")) {
             const authHeader = req.headers.get("Authorization");
             if (authHeader?.startsWith("Bearer ")) {
@@ -55,10 +62,10 @@ Deno.serve(async (req) => {
                     const [, payload] = decode(authHeader.split(" ")[1]);
                     return createResponse(payload, {}, req);
                 } catch {
-                    return createResponse({ error: "Invalid token" }, { status: 401 }, req);
+                    return createResponse({ error: "Token inválido" }, { status: 401 }, req);
                 }
             }
-            return createResponse({ error: "Unauthorized" }, { status: 401 }, req);
+            return createResponse({ error: "Não autorizado" }, { status: 401 }, req);
         }
 
         // --- AUTH ENDPOINTS ---
@@ -76,7 +83,8 @@ Deno.serve(async (req) => {
                 const token = await createToken({ email, name, id: userId, exp: Date.now() + 86400000 });
                 return createResponse({ token, user: { email, name, id: userId } }, {}, req);
             } catch (e) {
-                return createResponse({ error: "User already exists or DB failure" }, { status: 400 }, req);
+                console.error("Register error:", e);
+                return createResponse({ error: "Usuário já existe ou falha no DB" }, { status: 400 }, req);
             }
         }
 
@@ -93,17 +101,19 @@ Deno.serve(async (req) => {
                     JOIN "UserCredential" c ON u.id = c.user_id 
                     WHERE u.email = $1`, [email]);
 
-                const user = result.rows[0] as any;
+                const user = (result.rows[0] as any);
                 if (user && user.password_hash === passwordHash) {
                     const token = await createToken({ email: user.email, name: user.full_name, id: user.id, exp: Date.now() + 86400000 });
                     return createResponse({ token, user: { email: user.email, name: user.full_name, id: user.id } }, {}, req);
                 }
-                return createResponse({ error: "Invalid credentials" }, { status: 401 }, req);
+                return createResponse({ error: "Credenciais inválidas" }, { status: 401 }, req);
             } catch (e) {
-                return createResponse({ error: "Database error" }, { status: 500 }, req);
+                console.error("Login error:", e);
+                return createResponse({ error: "Erro no Banco de Dados" }, { status: 500 }, req);
             }
         }
 
+        // OAuth
         if (path === "/api/auth/google/login") {
             const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
             const redirectUri = `${SERVER_URL}/api/auth/google/callback`;
@@ -128,7 +138,7 @@ Deno.serve(async (req) => {
             const { email, name, picture } = payload as any;
 
             let userResult = await db.queryObject(`SELECT id FROM "User" WHERE email = $1`, [email]);
-            let userId = userResult.rows[0]?.id;
+            let userId = (userResult.rows[0] as any)?.id;
             if (!userId) {
                 const insert = await db.queryObject(`INSERT INTO "User" (email, full_name, avatar_image_url) VALUES ($1, $2, $3) RETURNING id`, [email, name, picture]);
                 userId = (insert.rows[0] as any).id;
@@ -138,30 +148,20 @@ Deno.serve(async (req) => {
             return Response.redirect(`${APP_BASE_URL}/auth/callback?token=${token}`);
         }
 
-        if (path === "/api/auth/me") {
-            const authHeader = req.headers.get("Authorization");
-            if (authHeader?.startsWith("Bearer ")) {
-                const [, payload] = decode(authHeader.split(" ")[1]);
-                return createResponse(payload, {}, req);
-            }
-            return createResponse("Unauthorized", { status: 401 }, req);
-        }
+        // 404 dinâmico com CORS para evitar erros de console
+        return createResponse({
+            error: "Rota não encontrada",
+            path: path,
+            method: req.method,
+            tip: "Se você está tentando registrar, use POST em /api/auth/register"
+        }, { status: 404 }, req);
 
-        // --- FUNCTION RUNNER (Lazy loading) ---
-        const functionName = path.split('/').pop();
-        if (!functionName || path.startsWith("/api/auth")) {
-            return createResponse("Not Found", { status: 404 }, req);
-        }
-
-        try {
-            const modulePath = `./${functionName}.ts`;
-            return createResponse(`Function ${functionName} runner not implemented in root. Send to /functions/${functionName} instead.`, { status: 501 }, req);
-        } catch (error: any) {
-            return createResponse({ error: error?.message }, { status: 500 }, req);
-        }
     } catch (globalError: any) {
         console.error("Global Error in server.ts:", globalError);
-        return createResponse({ error: "Internal Server Error", message: globalError?.message }, { status: 500 }, req);
+        return createResponse({
+            error: "Erro Interno do Servidor",
+            message: globalError?.message
+        }, { status: 500 }, req);
     }
 });
 
