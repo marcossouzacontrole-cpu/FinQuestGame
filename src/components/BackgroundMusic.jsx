@@ -54,7 +54,7 @@ export default function BackgroundMusic({ track = 'main' }) {
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 1 }}
-      className="fixed bottom-24 right-4 z-40 lg:bottom-6 lg:right-6"
+      className="fixed bottom-32 right-4 z-[60] lg:bottom-6 lg:right-6"
     >
       <motion.button
         whileHover={{ scale: 1.1 }}
