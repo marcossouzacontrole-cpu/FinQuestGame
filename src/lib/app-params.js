@@ -28,6 +28,14 @@ const getAppParamValue = (paramName, { defaultValue = undefined, removeFromUrl =
 		return defaultValue;
 	}
 	const storedValue = storage.getItem(storageKey);
+
+	// CRITICAL: Prevent localhost from leaking into production via localStorage
+	const IS_PROD = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+	if (IS_PROD && paramName === 'server_url' && storedValue?.includes('localhost')) {
+		console.warn('⚠️ Localhost detected in production storage. Forcing production URL.');
+		return defaultValue;
+	}
+
 	if (storedValue) {
 		return storedValue;
 	}
