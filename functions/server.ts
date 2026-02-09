@@ -37,17 +37,24 @@ Deno.serve(async (req) => {
         const url = new URL(req.url);
         const path = url.pathname;
 
-        // 1. Handle CORS Preflight (EXTREMAMENTE IMPORTANTE)
+        // 1. Health Check (SIMPLIFICADO E PRIORITÁRIO)
+        if (path === "/" || path === "/health" || path.includes("/api/health")) {
+            console.log(`[HealthCheck] Hit on ${path}`);
+            return createResponse({
+                status: "alive",
+                serverUrl: SERVER_URL,
+                path: path,
+                version: "5.0.4",
+                env: Deno.env.toObject ? "available" : "restricted"
+            }, {}, req);
+        }
+
+        // 2. Handle CORS Preflight
         if (req.method === "OPTIONS") {
             return new Response(null, { status: 204, headers: createCORSHeaders(req) });
         }
 
         console.log(`[API Request] ${req.method} ${path}`);
-
-        // 2. Health Check (Para debug)
-        if (path === "/api/health" || path === "/") {
-            return createResponse({ status: "alive", version: "5.0.3", serverUrl: SERVER_URL }, {}, req);
-        }
 
         // 3. Analytics (Anti-Crash)
         if (path.includes("/analytics/track")) {
