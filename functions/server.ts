@@ -4,7 +4,7 @@ import { createCORSHeaders } from "./cors.ts";
 
 const JWT_SECRET = Deno.env.get("JWT_SECRET") || "finquest-top-secret-key-2026";
 const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://finquestgame.vercel.app";
-const SERVER_URL = Deno.env.get("SERVER_URL") || "https://finquest-api-prod-marcos-123.deno.dev";
+const SERVER_URL = Deno.env.get("SERVER_URL") || "https://finquestgame-vwy2n6v632xe.finquestgame.deno.net";
 
 // Crypto key para JWT
 const key = await crypto.subtle.importKey(

@@ -1,7 +1,7 @@
 export const getBackendTarget = () => {
     const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
     const IS_PROD = hostname.includes('vercel.app') || hostname.includes('finquestgame.vercel.app');
-    const DEFAULT_PROD_URL = 'https://finquest-api-prod-marcos-123.deno.dev';
+    const DEFAULT_PROD_URL = 'https://finquestgame-vwy2n6v632xe.finquestgame.deno.net';
     const VITE_URL = import.meta.env.VITE_BASE44_BACKEND_URL;
 
     let target = 'http://localhost:5174';
